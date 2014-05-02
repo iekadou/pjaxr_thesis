@@ -12,19 +12,11 @@
 \usepackage[ngerman]{babel}
 \usepackage[babel,german=quotes]{csquotes}
 \usepackage{url}
+\usepackage{glossaries}
 
-\def \ajax {AJAX}
+\makeglossaries
 
-\def \pjax {PJAX}
-\def \pjaxRequest {PJAX-request}
-\def \pjaxRequests {PJAX-requests}
-
-\def \pjaxr {PJAXR}
-\def \pjaxrRequest {PJAXR-request}
-\def \pjaxrRequests {PJAXR-requests}
-
-\def \httpRequest {HTTP-request}
-\def \httpRequests {HTTP-requests}
+\include{glossaries}
 
 \author{Jonas Braun}
 
@@ -60,14 +52,14 @@
 % beginning of the actual text section
 \section{Introduction}
   \subsection{Preamble}
-  This bachelor thesis deals with the problem of asynchronicity on web-platforms and takes a close look at one attempt called \pjaxr{}.
+  This bachelor thesis deals with the problem of asynchronicity on web-platforms and takes a close look at one attempt called \gls{PJAXR}.
   It explains where it is suitable to use, which requirements are necessary and evaluates a few in this thesis developed server-side implementations.
   All load time analysis which is described in this thesis is computed with the example network speed of 16.000 kbit/s and a delay between the client and the server of 10ms.
   
 
-  \subsection{\httpRequests{}}
+  \subsection{HTTP-requests}
     The world wide web has one main protocol to let web-browsers and web-servers communicate, the Hypertext Transfer Protocol (HTTP), which is built on top of the Transmission Control Protocol (TCP).
-    TCP and so \httpRequests{} always start with a handshake to establish a connection before data is transferred.
+    TCP and so \gls{httpRequest}s always start with a handshake to establish a connection before data is transferred.
     After this handshake, the client sends the request data to the web-server.
     This recognizes and interprets the request and if the requested resource is available, sends the according data back, otherwise it sends an error.
     Typically it renders data out of a database into a HTML-Template or to JSON and sends it back as the response.
@@ -103,7 +95,7 @@
       Dynamic content in websites is content which is changed within an already fully loaded web page, without loading another full page including all resources. 
       The Client-server model, which is described in \ref{clientServerModel}, does not support dynamic changes of the content. 
       To retrieve new information the client has to request another full web page, including all resources and data which is necessary, which makes this model \enquote{synchronous}.
-      An \enquote{asynchronous} model is able to change content dynamically without having to load a whole page. \ajax{}, specified in \ref{ajax}, is the most used asynchronous technique for web platforms, \pjax{} and \pjaxr{}, introduced in \ref{pjax} and \ref{pjaxr}, are built on top of \ajax{}, so they are asynchronous as well.
+      An \enquote{asynchronous} model is able to change content dynamically without having to load a whole page. \gls{AJAX}, specified in \ref{ajax}, is the most used asynchronous technique for web platforms, \gls{PJAX} and \gls{PJAXR}, introduced in \ref{pjax} and \ref{pjaxr}, are built on top of \gls{AJAX}, so they are asynchronous as well.
       
 
       \subsection{The history object\label{theHistoryObject}}
@@ -113,18 +105,18 @@
       It has the methods .back(), .forward() and .go() which are needed to navigate in the history, incl.  the back- and forward-buttons of the browser.
       Additionally the methods .pushState() and .replaceState() give developers the opportunity to add or replace an item of the history list.
       By default, when loading a new page, the browser automatically invokes .pushState() to append a new item, the new state, to the list.
-      This behavior is not the default behavior on \ajax-requests, so the developer has to use the two latter functions to activate the back- and forward-buttons in an asynchronous environment. \pjax{} and \pjaxr{} already consist of an integration like that.
+      This behavior is not the default behavior on \gls{AJAX}-requests, so the developer has to use the two latter functions to activate the back- and forward-buttons in an asynchronous environment. \gls{PJAX} and \gls{PJAXR} already consist of an integration like that.
 
 
   \subsection{Client-server model\label{clientServerModel}}
     The world wide web has one standard pattern which controls the data flow, the \enquote{Client-server model}.
-    It defines that a client requests a web source via a \httpRequest{} including a URL and HTTP-headers which define what exactly the client wants to receive from the server.
+    It defines that a client requests a web source via a \gls{httpRequest} including a URL and HTTP-headers which define what exactly the client wants to receive from the server.
     Afterwards all further resources, e.g. css, images, scripts, which are linked on this web source are requested.
     Any further request behaves in the exact same way, a full load of a page is always needed.
 
     \subsubsection{Load time analysis}
-      The Client-server model has one initial \httpRequest{} to get the HTML-page and afterwards it has another request per resource linked in it. 
-      As seen in \ref{httpLoadTime} a \httpRequest{} of a Wordpress page lasts about 200ms.
+      The Client-server model has one initial \gls{httpRequest} to get the HTML-page and afterwards it has another request per resource linked in it. 
+      As seen in \ref{httpLoadTime} a \gls{httpRequest} of a Wordpress page lasts about 200ms.
       Resources like CSS and scripts have typically small file-sizes.
       On modern pages an average file-size of all those resources are 100kb per page. 
       Because of the connection delay it is better to have a minimum of those resources, so they are typically combined together to one file per type.
@@ -134,7 +126,7 @@
     
     \subsubsection{Requirements}
     This model does not have extra requirements.
-    Only a HTTP-Server which can take \httpRequests{} is needed.
+    Only a HTTP-Server which can take \gls{httpRequest}s is needed.
 
     \subsubsection{Example}
     TODO
@@ -147,22 +139,22 @@
       \end{itemize}
 
     
-  \subsection[\ajax]{\ajax{}\footnote{\url{https://developer.mozilla.org/de/docs/AJAX}}\label{ajax}}
+  \subsection[AJAX]{\gls{AJAX}\footnote{\url{https://developer.mozilla.org/de/docs/AJAX}}\label{ajax}}
     \includegraphics[width=13cm]{images/client_server_vs_ajax}\\
     As shown in \ref{clientServerModel} the Client-server model forces the requests always to be synchronous, which means that the client has to wait for a fully loaded page on every request.\\
-    Through the \enquote{Asynchronous JavaScript and XML}, short \ajax{}, this can be improved.
-    The data flow in AJAX is very similar to the Client-server model, but is using a new, third layer: the \enquote{\ajax{}-engine}.
-    The first request to a web-server using \ajax{} is the complete same as one without \ajax{} with the exception, that one of the requested sources is a Javascript, which instantiates a \ajax{}-engine.
-    The following requests now are handled by this \ajax{}-engine, allowing to request web-sources asynchronously.\\
-    Without using \ajax{} after receiving HTML, the browser renders the whole page, even if there are only small changes to the page it rendered before. \ajax{} instead only requests small parts of a website, most of the time in XML or JSON format, interprets it and then only adds, replaces or appends old content with the newly received.
+    Through the \enquote{Asynchronous JavaScript and XML}, short \gls{AJAX}, this can be improved.
+    The data flow in AJAX is very similar to the Client-server model, but is using a new, third layer: the \enquote{\gls{AJAX}-engine}.
+    The first request to a web-server using \gls{AJAX} is the complete same as one without \gls{AJAX} with the exception, that one of the requested sources is a Javascript, which instantiates a \gls{AJAX}-engine.
+    The following requests now are handled by this \gls{AJAX}-engine, allowing to request web-sources asynchronously.\\
+    Without using \gls{AJAX} after receiving HTML, the browser renders the whole page, even if there are only small changes to the page it rendered before. \gls{AJAX} instead only requests small parts of a website, most of the time in XML or JSON format, interprets it and then only adds, replaces or appends old content with the newly received.
     \subsubsection{Load time analysis}
       The first request takes the same time as the classic Client-server-model.
       For every further request it takes the time of a network delay, plus the backend-query load time.
       In this case the backend queries are optimized to only fetch what is needed, which in most cases results in a total load time of 50ms.\\
-      Having a lot of features getting updated results in multiple occurrences of network delay, which shows that it's better to update every content which is needed in only one \ajax{}-request.
+      Having a lot of features getting updated results in multiple occurrences of network delay, which shows that it's better to update every content which is needed in only one \gls{AJAX}-request.
     
     \subsubsection{Requirements}
-    \ajax{}-requests need an extra API, where the asynchronous requests are handled.
+    \gls{AJAX}-requests need an extra API, where the asynchronous requests are handled.
     This API's response is often a JSON-Object, which then needs a client-side interpretation and rendering to inject into the website's current DOM.
     Because not all objects have the same structure or template the interpreter often grows bigger with every API-endpoint you contact to customize it, fitting for every object.
     It is useful to use a client-side template-engine to render the interpreted objects into the DOM.
@@ -171,42 +163,42 @@
     TODO
 
     \subsubsection{Pro / Contra}
-  	  There are a few advantages using \ajax{}:
+  	  There are a few advantages using \gls{AJAX}:
   	  \begin{itemize}
-        \item[+]{One of the biggest advantage using \ajax{} is, that live user interaction is possible, due to the browser does not have to reload the whole website after interacting only with a small part of it.}
-  	    \item[+]{Using \ajax{} makes it possible to display multiple, even in the backend, independent items on one website, without having to reload the whole website if only one changes.
-  	    In the time before \ajax{} independent items were displayed on individual websites to avoid too many reloads.}
+        \item[+]{One of the biggest advantage using \gls{AJAX} is, that live user interaction is possible, due to the browser does not have to reload the whole website after interacting only with a small part of it.}
+  	    \item[+]{Using \gls{AJAX} makes it possible to display multiple, even in the backend, independent items on one website, without having to reload the whole website if only one changes.
+  	    In the time before \gls{AJAX} independent items were displayed on individual websites to avoid too many reloads.}
   	    \item[-]{The biggest disadvantage is that by default the back- and forward buttons of the browser are not supported anymore.
   	    If they should have their functionality it's a lot of work to bring this functionality back in a general way.}
-  	    \item[-]{A page being loaded via \ajax{} is not easily interpretable by search bots, as content is loaded asynchronously and possibly not visible for a bot.}
+  	    \item[-]{A page being loaded via \gls{AJAX} is not easily interpretable by search bots, as content is loaded asynchronously and possibly not visible for a bot.}
   	    \item[-]{Not using .pushState() or .replaceState() a page could completely change without seeing the URL updated.
   	    This means that if you want to reach the same page again you can not just enter the URL, but have to do the same actions to reach the page than before, possibly a lot of clicks.}
   	  \end{itemize}
 
   
-  \subsection[\pjax]{\pjax\footnote{\url{http://pjax.heroku.com}}\label{pjax}}
+  \subsection[PJAX]{\gls{PJAX}\footnote{\url{http://pjax.heroku.com}}\label{pjax}}
 	\includegraphics[width=13cm]{images/ajax_vs_pjax}\\
 	\enquote{Pushstate Asynchronous JavaScript and XML} is a technique to implement asynchronous requests in a generic way, while still having full browser support.
-    Recognizing the problems of \ajax{} the new methods .pushState() and .replaceState() were implemented into modern browsers.
-    As described in \ref{theHistoryObject} it allows the website-developer to avoid the disadvantages of \ajax{}:\\
-    It's now possible to save the current state of a website and let the browser treat the next changes via \ajax{} like a fully request.
+    Recognizing the problems of \gls{AJAX} the new methods .pushState() and .replaceState() were implemented into modern browsers.
+    As described in \ref{theHistoryObject} it allows the website-developer to avoid the disadvantages of \gls{AJAX}:\\
+    It's now possible to save the current state of a website and let the browser treat the next changes via \gls{AJAX} like a fully request.
     This means that the back-and forward functionality of your browser is usable again and the current url of your browser changes without having to request a whole new page.\\\\
-    The flow of \pjax{} is now:\\
-    First an initial request to a web-server is needed using \pjax{}, which is just like the Client-server model, described in \ref{clientServerModel}.
+    The flow of \gls{PJAX} is now:\\
+    First an initial request to a web-server is needed using \gls{PJAX}, which is just like the Client-server model, described in \ref{clientServerModel}.
     The changes affect the following requests: 
-    The user requests a resource, but now sending an additional HTTP-header which tells the sever it is a \pjaxRequest{}.
+    The user requests a resource, but now sending an additional HTTP-header which tells the sever it is a \gls{PJAX}-request.
     The server interprets and delivers only the needed data in HTML.
-    Requesting the same resource without \pjax{} returns you the whole page, containing the content of a \pjaxRequest{} plus everything which is the content which is left out in a \pjaxRequest{}.
-    Note that \pjax{} and \pjaxr{} is meant to be integrated as a method to change pages more efficiently.
-    For page-independent content, which is not linked to a URL, like a like-button or live-updated stocks pure \ajax{} is still needed.
+    Requesting the same resource without \gls{PJAX} returns you the whole page, containing the content of a \gls{PJAX}-request plus everything which is the content which is left out in a \gls{PJAX}-request.
+    Note that \gls{PJAX} and \gls{PJAXR} is meant to be integrated as a method to change pages more efficiently.
+    For page-independent content, which is not linked to a URL, like a like-button or live-updated stocks pure \gls{AJAX} is still needed.
 
     \subsubsection{Load time analysis}
-      In a case of only one small part of the page needs to be updated, \pjax{} is as efficient as \ajax{}, which means it is about 50ms per request.
-      But if you have a complex web-platform you need to update nearly the complete page which leads to load times about the same like the Client-server-model, except the scripts and images which will not invalidate via \pjax{}.
+      In a case of only one small part of the page needs to be updated, \gls{PJAX} is as efficient as \gls{AJAX}, which means it is about 50ms per request.
+      But if you have a complex web-platform you need to update nearly the complete page which leads to load times about the same like the Client-server-model, except the scripts and images which will not invalidate via \gls{PJAX}.
     
     \subsubsection{Requirements}
-    \pjax{} needs an additional switch in the HTTP-Server.
-    The backend has to decide whether the incoming request is a \pjaxRequest{} or not and then render the data into either the normal template, or the \pjax{}-template.
+    \gls{PJAX} needs an additional switch in the HTTP-Server.
+    The backend has to decide whether the incoming request is a \gls{PJAX}-request or not and then render the data into either the normal template, or the \gls{PJAX}-template.
     On client side only the jquery-pjax library has to be included and activated and the interpretation of the responses are handled by it.
 
     \subsubsection{Example}
@@ -215,30 +207,30 @@
     \subsubsection{Pro / Contra}
       \begin{itemize}
   	    \item[+]{The browser functionality is supported completely, especially the back- and forward-buttons.}
-  	    \item[+]{It's not necessary to implement every \ajax{}-request in the backend and frontend by hand, a generic solution is easily possible.}
-  	    \item[+]{A requested page is always reachable under the same URL, no matter if the page was fully loaded or by a \pjaxRequest{}.}
+  	    \item[+]{It's not necessary to implement every \gls{AJAX}-request in the backend and frontend by hand, a generic solution is easily possible.}
+  	    \item[+]{A requested page is always reachable under the same URL, no matter if the page was fully loaded or by a \gls{PJAX}-request.}
   	    \item[+]{Only one point to maintain templates in the backend, because no frontend template-engine is needed.}
-  	    \item[-]{Only one container and so only one individual feature of the website is affected by a \pjaxRequest{}.}
-  	    \item[-]{There are a lot of cases in which \pjax{} is not compatible with the website structure, or would not be as efficient as it could.}
+  	    \item[-]{Only one container and so only one individual feature of the website is affected by a \gls{PJAX}-request.}
+  	    \item[-]{There are a lot of cases in which \gls{PJAX} is not compatible with the website structure, or would not be as efficient as it could.}
       \end{itemize}
 
 
-  \subsection{\pjaxr{}, \label{pjaxr}}
+  \subsection{PJAXR, \label{pjaxr}}
     \includegraphics[width=13cm]{images/pjax_vs_pjaxr}\\
-    \enquote{Pushstate aJAx eXtended Replacements} is a web-request model which solves \pjax{}'s biggest problem giving the ability of multiple replacements with only one request. 
+    \enquote{Pushstate aJAx eXtended Replacements} is a web-request model which solves \gls{PJAX}'s biggest problem giving the ability of multiple replacements with only one request. 
     Every website has a namespace.
-    Sending the current website's namespace as a HTTP-header the \pjaxr{}-backend can decide on which level the current requested website's namespace is matching the one handed through the header.
+    Sending the current website's namespace as a HTTP-header the \gls{PJAXR}-backend can decide on which level the current requested website's namespace is matching the one handed through the header.
     According to the match, the server decides in which template the resource should be rendered and requests only the necessary data to render it.
-    Other than \pjax{} it does not render and in the frontend replace a specific container, specified before the request, but interprets the response and replaces the received containers with their existing ones.
-    As in \pjax{} only one point is necessary to be maintained because you do not have frontend-templating logic.
+    Other than \gls{PJAX} it does not render and in the frontend replace a specific container, specified before the request, but interprets the response and replaces the received containers with their existing ones.
+    As in \gls{PJAX} only one point is necessary to be maintained because you do not have frontend-templating logic.
 
     \subsubsection{Load time analysis}
-      Like \pjax{} the first request takes the same amount of time as every other model.
-      But with \pjax{} it's possible to load changing content asynchronously and efficiently with only one request.
+      Like \gls{PJAX} the first request takes the same amount of time as every other model.
+      But with \gls{PJAX} it's possible to load changing content asynchronously and efficiently with only one request.
       This concludes in a load time of network delay + needed server backends which results in about 75ms for a normal page.
     
     \subsubsection{Requirements}
-    \pjaxr{} needs a hierarchical template structure, a \pjaxr{}-backend and on client-side the jquery-pjaxr library has to be included and activated, as in \pjaxr{} the interpretation of the response is made by that library.
+    \gls{PJAXR} needs a hierarchical template structure, a \gls{PJAXR}-backend and on client-side the jquery-pjaxr library has to be included and activated, as in \gls{PJAXR} the interpretation of the response is made by that library.
 
     \subsubsection{Example}
     TODO
@@ -246,23 +238,23 @@
     \subsubsection{Pro / Contra}
       \begin{itemize}
   	    \item[+]{The browser functionality is supported completely, especially the back- and forward-buttons.}
-  	    \item[+]{It's not necessary to implement every \ajax{}-request in the backend or  frontend by hand, a generic solution is possible.}
-  	    \item[+]{You can replace every container you need in only one \pjaxrRequest{}}
-  	    \item[+]{\pjaxr{} can be used on every web-platform using a hierarchical-built template-system.}
+  	    \item[+]{It's not necessary to implement every \gls{AJAX}-request in the backend or  frontend by hand, a generic solution is possible.}
+  	    \item[+]{You can replace every container you need in only one \gls{PJAXR}-request.}
+  	    \item[+]{\gls{PJAXR} can be used on every web-platform using a hierarchical-built template-system.}
   	    \item[+]{Only one point to maintain templates in the backend, because no client-side template-engine is needed.}
-        \item[-]{It is not affordable to use \pjaxr{} on finalized projects without a hierarchical template structure, which is necessary.}
+        \item[-]{It is not affordable to use \gls{PJAXR} on finalized projects without a hierarchical template structure, which is necessary.}
       \end{itemize}
 
 
   \subsection{Interim conclusion}
   On websites only providing static content the classic Client-server model is as efficient as every other model described above, but it's not possible to have dynamic content on it.
-  Pure \ajax{} takes a lot of work to be integrated into larger systems, especially adjusting the client-side interpreter for every resource.
+  Pure \gls{AJAX} takes a lot of work to be integrated into larger systems, especially adjusting the client-side interpreter for every resource.
   The more complex a website is, the more the other models take advantage.
-  If only one container needs to be changed at a new page, then \pjax{} is a good choice.
-  On most sites it's not always the same container to be replaced, on which \pjaxr{} takes it's advantage.\\
-  For extremely asynchronous items, for example like-buttons or live-updated content like stocks, which are page-independent features and not linked to a URL pure \ajax{} should be the right choice.
+  If only one container needs to be changed at a new page, then \gls{PJAX} is a good choice.
+  On most sites it's not always the same container to be replaced, on which \gls{PJAXR} takes it's advantage.\\
+  For extremely asynchronous items, for example like-buttons or live-updated content like stocks, which are page-independent features and not linked to a URL pure \gls{AJAX} should be the right choice.
 
-\section{\pjaxr{}}
+\section{PJAXR}
   TODO
   
   \subsection{Use cases}
@@ -282,5 +274,7 @@ TODO
   
 \section{Summary}
 TODO
+
+\printglossary
 
 \end{document}
